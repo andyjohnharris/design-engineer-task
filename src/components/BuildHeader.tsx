@@ -1,10 +1,10 @@
 /**
  * BuildHeader component
- * 
+ *
  * This component displays the header of a build, including the pipeline name, build number, branch, pull request, status, and actions.
- * 
+ *
  *  -- NOTE: Scroll down to line 308 for the design engineer task. --
- * 
+ *
  * @param {BuildHeaderProps} props - The props for the BuildHeader component.
  * @returns {React.ReactNode} The BuildHeader component.
  */
@@ -27,6 +27,7 @@ import {
   getStatusColors,
   computeBuildStats,
 } from "@/lib/buildStatus";
+import ExpandedBuildView from "./ExpandedBuildView";
 
 interface BuildHeaderProps {
   /** Pipeline / project name shown in the breadcrumb. */
@@ -229,18 +230,18 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                           {pullRequest.title}
                         </h3>
 
-                      <div className="flex items-center gap-2 text-xs/4 text-zinc-600">
-                        <div className="flex items-center space-x-1">
-                          <span className="font-medium">
-                            {pullRequest.author.name}
-                          </span>
-                          <span className="sr-only sm:not-sr-only sm:inline">triggered on</span>
-                          <span className="sm:hidden" aria-hidden="true">•</span>
-                          <span className="truncate">
-                            {pullRequest.triggeredAt}
-                          </span>
+                        <div className="flex items-center gap-2 text-xs/4 text-zinc-600">
+                          <div className="flex items-center space-x-1">
+                            <span className="font-medium">
+                              {pullRequest.author.name}
+                            </span>
+                            <span className="sr-only sm:not-sr-only sm:inline">triggered on</span>
+                            <span className="sm:hidden" aria-hidden="true">•</span>
+                            <span className="truncate">
+                              {pullRequest.triggeredAt}
+                            </span>
+                          </div>
                         </div>
-                      </div>
                       </div>
                     </div>
                   </div>
@@ -327,7 +328,7 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                 }`}
                 inert={!isExpanded ? "" : undefined}
                 aria-hidden={!isExpanded}
-                >
+              >
 
                 {/*
                 ──────────────────────────────────────────────────────────────────
@@ -346,7 +347,8 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                 */}
 
                 <div className="border-t border-zinc-200 mt-2 px-2 py-6 text-center text-sm text-zinc-400">
-                  Your solution goes here — see AGENTS.md and README.md
+                  {/* Your solution goes here — see AGENTS.md and README.md */}
+                  <ExpandedBuildView buildSteps={buildSteps} />
                 </div>
               </div>
             </div>

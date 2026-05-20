@@ -79,6 +79,12 @@ export const formatDuration = (secs: number): string => {
   return `${m}m ${s}s`;
 };
 
+/** Parse and format duration string in one call */
+export const getDuration = (d: string): string => {
+  const duration = parseDuration(d);
+  return formatDuration(duration);
+};
+
 /** Compute aggregate build stats from pipeline steps. */
 export const computeBuildStats = (steps: BuildStep[]) => {
   let totalSeconds = 0;
@@ -100,9 +106,9 @@ export const computeBuildStats = (steps: BuildStep[]) => {
   }
 
   const parts: string[] = [];
-  if (failedCount > 0)
+  if (failedCount > 0) 
     parts.push(`${failedCount} failed job${failedCount !== 1 ? "s" : ""}`);
-  if (blockedCount > 0)
+  if (blockedCount > 0) 
     parts.push(`${blockedCount} blocked`);
 
   return {
@@ -111,4 +117,42 @@ export const computeBuildStats = (steps: BuildStep[]) => {
     blockedCount,
     summaryText: parts.join(" · ") || "All passed",
   };
+};
+
+/** Get the current build steps */
+export const getCurrentSteps = (steps: BuildStep[]): { failed: BuildStep[]; inProgress: BuildStep[] } => {
+  const failed: BuildStep[] = [];
+  const inProgress: BuildStep[] = [];
+
+  for (const step of steps) {
+    if (step.status === "failed") {
+      failed.push(step);
+    }
+    if (step.status === "in-progress") {
+      inProgress.push(step);
+    }
+  }
+
+  return { failed, inProgress };
+};
+
+/** Exit code helper */
+export const getExitCodeText = (exitCode: number) => {
+  let message = `Exit code ${exitCode} `;
+
+  if (exitCode < 0) message += `(Killed by signal ${Math.abs(exitCode)})`;
+  if (exitCode === 0) message += `(Success)`;
+  if (exitCode === 1) message += `(Build error)`;
+  if (exitCode === 2) message += `(Misuse of Shell Builtins)`;
+  if (exitCode === 126) message += `(Command invoked cannot execute)`;
+  if (exitCode === 127) message += `(Command not found)`;
+  if (exitCode === 128) message += `(Invalid exit argument)`;
+  if (exitCode === 130) message += `(Terminated by signal)`;
+  if (exitCode === 134) message += `(Aborted)`;
+  if (exitCode === 137) message += `(Killed)`;
+  if (exitCode === 139) message += `(Segmentation fault)`;
+  if (exitCode === 143) message += `(Terminated)`;
+  if (exitCode === 255) message += `(Unknown error)`;
+
+  return message;
 };
