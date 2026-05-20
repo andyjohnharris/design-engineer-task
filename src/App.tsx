@@ -17,6 +17,9 @@ function App() {
         }}
         buildSteps={mockBuildSteps}
         status="failed"
+        onRetryFailedJobs={() => {}}
+        onRestartBuild={() => {}}
+        onCancelBuild={() => {}}
       />
       <PageSkeleton />
     </div>

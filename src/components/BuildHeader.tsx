@@ -108,6 +108,11 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
 
           {/* PR row + expand/collapse + progress bar */}
           {pullRequest && (
+            // Clickable-card pattern: the row toggles expansion on mouse click as a convenience,
+            // but the chevron button (with aria-expanded + aria-controls) is the keyboard-accessible
+            // disclosure trigger. Making the row itself a button would break ARIA (it contains
+            // nested interactive controls — chevron, BuildActionsComboButton).
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
             <div
               className="group/pr px-1.5 pb-2 rounded-b-md transition-all duration-50 ease-in-out relative cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
@@ -116,28 +121,31 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
             >
               <div className="pl-1 pt-1 pb-0.5">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-0">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
-                        className={cn("hidden group-hover/pr:flex py-1.5 px-[7px] rounded-md transition-colors flex-shrink-0 mt-0.5 bg-blue-600")}
+                        className={cn(
+                          "hidden group-hover/pr:flex group-focus-within/pr:flex py-1.5 px-[7px] rounded-md transition-colors flex-shrink-0 mt-0.5 bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+                        )}
                         aria-label={
                           isExpanded ? "Collapse details" : "Expand details"
                         }
                         aria-expanded={isExpanded}
+                        aria-controls="build-details-panel"
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsExpanded(!isExpanded);
                         }}
                       >
                         {isExpanded ? (
-                          <ChevronsDownUp size={14} strokeWidth={2.5} className="text-white" />
+                          <ChevronsDownUp size={14} strokeWidth={2.5} className="text-white" aria-hidden="true" />
                         ) : (
-                          <ChevronsUpDown size={14} strokeWidth={2.5} className="text-white" />
+                          <ChevronsUpDown size={14} strokeWidth={2.5} className="text-white" aria-hidden="true" />
                         )}
                       </button>
                       {status === "failed" && (
-                        <div className="group-hover/pr:hidden">
+                        <div className="group-hover/pr:hidden group-focus-within/pr:hidden" aria-hidden="true">
                           <svg
                             width="28px"
                             height="28px"
@@ -164,15 +172,15 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                         </div>
                       )}
                       {status === "running" && (
-                        <div className="rounded-full bg-amber-500 p-1 group-hover/pr:hidden">
+                        <div className="rounded-full bg-amber-500 p-1 group-hover/pr:hidden group-focus-within/pr:hidden" aria-hidden="true">
                           <Loader2
                             size={16}
-                            className="text-white animate-spin"
+                            className="text-white animate-spin motion-reduce:animate-none"
                           />
                         </div>
                       )}
                       {(status === "passed" || status === "complete") && (
-                        <div className="rounded-full bg-green-500 p-1 group-hover/pr:hidden">
+                        <div className="rounded-full bg-green-500 p-1 group-hover/pr:hidden group-focus-within/pr:hidden" aria-hidden="true">
                           <Check
                             size={16}
                             className="text-white"
@@ -181,19 +189,19 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                         </div>
                       )}
                       {status === "canceled" && (
-                        <div className="rounded-full bg-gray-400 p-1 group-hover/pr:hidden">
+                        <div className="rounded-full bg-gray-400 p-1 group-hover/pr:hidden group-focus-within/pr:hidden" aria-hidden="true">
                           <X size={16} className="text-white" />
                         </div>
                       )}
                       {status === "pending" && (
-                        <div className="rounded-full bg-gray-300 p-1 group-hover/pr:hidden">
+                        <div className="rounded-full bg-gray-300 p-1 group-hover/pr:hidden group-focus-within/pr:hidden" aria-hidden="true">
                           <Clock size={16} className="text-gray-600" />
                         </div>
                       )}
 
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1 text-sm/4 text-zinc-900 font-semibold">
-                          <span className="hidden sm:inline">
+                          <span className="sr-only sm:not-sr-only sm:inline">
                             {statusPrefix}
                           </span>
                           <span>{buildStats.duration}</span>
@@ -204,30 +212,35 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                       </div>
                     </div>
 
-                    <div className="h-8 w-px bg-zinc-300 flex-shrink-0" />
+                    <div className="flex min-w-0 flex-[1_1_14rem] items-center gap-3">
+                      <div
+                        className="hidden sm:block h-8 w-px bg-zinc-300 shrink-0 self-center"
+                        aria-hidden="true"
+                      />
 
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm/4 font-medium text-zinc-800 truncate mb-0">
-                        <span className="hidden sm:inline">
-                          Pull Request #{pullRequest.number}:{" "}
-                        </span>
-                        <span className="sm:hidden">
-                          PR #{pullRequest.number}:{" "}
-                        </span>
-                        {pullRequest.title}
-                      </h3>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm/4 font-medium text-zinc-800 mb-0 line-clamp-2 sm:line-clamp-1">
+                          <span className="hidden sm:inline">
+                            Pull Request #{pullRequest.number}:{" "}
+                          </span>
+                          <span className="sm:hidden">
+                            PR #{pullRequest.number}:{" "}
+                          </span>
+                          {pullRequest.title}
+                        </h3>
 
                       <div className="flex items-center gap-2 text-xs/4 text-zinc-600">
                         <div className="flex items-center space-x-1">
                           <span className="font-medium">
                             {pullRequest.author.name}
                           </span>
-                          <span className="hidden sm:inline">triggered on</span>
-                          <span className="sm:hidden">•</span>
+                          <span className="sr-only sm:not-sr-only sm:inline">triggered on</span>
+                          <span className="sm:hidden" aria-hidden="true">•</span>
                           <span className="truncate">
                             {pullRequest.triggeredAt}
                           </span>
                         </div>
+                      </div>
                       </div>
                     </div>
                   </div>
@@ -248,11 +261,12 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
 
               {/* Segmented progress bar — hidden while expanded */}
               {!isExpanded && buildSteps.length > 0 && (
-                <div
-                  className="mt-1.5 cursor-pointer group"
-                  onClick={() => setIsExpanded(true)}
-                >
-                  <div className="flex gap-[1px] h-1.5 rounded-sm overflow-hidden bg-zinc-100 transition-all">
+                <div className="mt-1.5 group">
+                  <div
+                    className="flex gap-[1px] h-2 rounded-sm overflow-hidden bg-zinc-100 transition-all"
+                    role="list"
+                    aria-label="Build steps"
+                  >
                     {buildSteps.map((step, index) => {
                       const weight =
                         step.jobs && step.jobs.length > 0
@@ -280,11 +294,13 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                           key={`progress-${step.id}-${index}`}
                           className={`h-full relative overflow-hidden ${bgColor}`}
                           style={{ width: `${widthPercent}%` }}
+                          role="listitem"
+                          aria-label={`${step.name} — ${getStatusLabel(step.status)}`}
                           title={`${step.name} - ${getStatusLabel(step.status)}`}
                         >
                           {step.status === "in-progress" && (
                             <div
-                              className="absolute inset-0 animate-barber"
+                              className="absolute inset-0 animate-barber motion-reduce:animate-none"
                               style={{
                                 backgroundImage: `repeating-linear-gradient(
                                   -45deg,
@@ -305,9 +321,12 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
               )}
 
               <div
-                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                id="build-details-panel"
+                className={`transition-all duration-300 ease-in-out overflow-hidden motion-reduce:transition-none ${
                   isExpanded ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
                 }`}
+                inert={!isExpanded ? "" : undefined}
+                aria-hidden={!isExpanded}
                 >
 
                 {/*
@@ -327,7 +346,7 @@ const BuildHeader: React.FC<BuildHeaderProps> = ({
                 */}
 
                 <div className="border-t border-zinc-200 mt-2 px-2 py-6 text-center text-sm text-zinc-400">
-                  Your implementation goes here — see AGENTS.md and README.md
+                  Your solution goes here — see AGENTS.md and README.md
                 </div>
               </div>
             </div>

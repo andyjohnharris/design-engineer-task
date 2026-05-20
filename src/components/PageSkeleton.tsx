@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { mockBuildSteps } from "@/data/mockBuildSteps";
 import type { BuildStep, StepStatus } from "@/types/build";
@@ -32,26 +33,41 @@ function Bar({ className }: { className?: string }) {
 }
 
 export default function PageSkeleton() {
+  const [selected, setSelected] = useState<string | null>(
+    skeletonSteps[0]?.name ?? null,
+  );
+
   return (
-    <div className="flex-1 mx-2 lg:mx-3 mt-1 select-none" aria-hidden="true">
+    <div className="flex-1 flex flex-col mx-2 lg:mx-3 mt-1 select-none" aria-hidden="true">
       {/* Tab navigation bar */}
-      <div className="flex items-center gap-2 border-b border-zinc-200 px-2 py-2.5">
-        <Bar className="w-24 h-5 bg-zinc-400/50" />
-        <Bar className="w-24 h-5 hover:bg-indigo-100/80" />
-        <Bar className="w-24 h-5 hover:bg-indigo-100/80" />
-        <Bar className="w-24 h-5 hover:bg-indigo-100/80" />
+      <div className="flex items-center gap-1 border-b border-zinc-200 py-1.5">
+        {["List", "Table", "Canvas", "Waterfall"].map((label, i) => (
+          <div
+            key={label}
+            className={cn(
+              "px-3 py-1 rounded text-sm",
+              i === 0
+                ? "bg-zinc-200/70 text-zinc-800 font-medium"
+                : "text-zinc-500",
+            )}
+          >
+            {label}
+          </div>
+        ))}
       </div>
 
       {/* Content area: step list + sidebar */}
-      <div className="flex">
+      <div className="flex flex-col sm:flex-row flex-1 min-h-0">
         {/* Step rows */}
         <div className="flex-1 min-w-0">
           {skeletonSteps.map((step) => (
             <div
               key={step.name}
+              onClick={() => setSelected(selected === step.name ? null : step.name)}
               className={cn(
-                "flex items-center gap-3 px-3 py-3 border-b border-zinc-100",
+                "flex items-center gap-3 px-3 py-3 border-b border-zinc-100 cursor-pointer hover:bg-zinc-100",
                 step.indent && "pl-10",
+                selected === step.name && "bg-zinc-100 hover:bg-zinc-100",
               )}
             >
               <div
@@ -75,20 +91,29 @@ export default function PageSkeleton() {
         </div>
 
         {/* Sidebar */}
-        <div className="w-[33.33%] shrink-0 border-l border-zinc-200 hidden sm:block">
-          <div className="flex gap-2 px-4 py-3 border-b border-zinc-100">
-            <Bar className="w-32 h-3.5" />
-            <Bar className="w-12 h-3.5" />
-          </div>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between px-4 py-3 border-b border-zinc-100"
-            >
-              <Bar className={cn("h-3", i % 2 === 0 ? "w-20" : "w-16")} />
-              <Bar className="w-6 h-3" />
+        <div className="w-full sm:w-[33.33%] shrink-0 border-t sm:border-t-0 sm:border-l border-zinc-200 flex flex-col">
+          {selected ? (
+            <>
+              <div className="px-4 py-3 border-b border-zinc-100 text-sm font-medium text-zinc-800">
+                {selected}
+              </div>
+              {/* Log panel tabs — first tab (the log) is selected */}
+              <div className="flex items-center gap-4 px-4 py-2 border-b border-zinc-200">
+                <Bar className="w-10 h-3 bg-zinc-500" />
+                <Bar className="w-12 h-3" />
+                <Bar className="w-14 h-3" />
+                <Bar className="w-10 h-3" />
+              </div>
+              {/* Log block */}
+              <div className="h-[50vh] sm:h-auto sm:flex-1 p-4 overflow-hidden">
+                <Bar className="h-full w-full bg-zinc-900" />
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-sm text-zinc-400 px-4 text-center">
+              Select a step to view details
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
